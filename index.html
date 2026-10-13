@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>قلبك أمانة - حاسبة خطورة أمراض القلب والأوعية الدموية (CVD Risk)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'Segoe UI', 'Tahoma', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        html { -webkit-text-size-adjust: 100%; }
+        /* ===== Required-field markers ===== */
+        .req-mark .miss { display:inline-block; margin-right:6px; padding:1px 8px; border-radius:9999px; background:#fee2e2; color:#b91c1c; font-size:11px; font-weight:800; border:1px solid #fca5a5; }
+        .req-mark .ok   { display:inline-block; margin-right:6px; color:#059669; font-size:13px; font-weight:900; }
+        select.missing-field { border-color:#f87171 !important; background-color:#fef2f2 !important; }
+        .missing-group > label { border-color:#fca5a5 !important; background-color:#fef2f2; }
+
+        /* ===== Mobile tuning ===== */
+        select, input[type=number] { font-size: 16px !important; min-height: 48px; }   /* يمنع تكبير iOS عند الضغط */
+        #cvdForm label.cursor-pointer { min-height: 48px; font-size: 14px; }
+        #cvdForm label.block { font-size: 14px; }
+        button { min-height: 44px; touch-action: manipulation; }
+        @media (max-width: 1023px) {
+            body { padding-bottom: calc(86px + env(safe-area-inset-bottom, 0px)); }
+        }
+        @media (max-width: 640px) {
+            #riskPercent { font-size: 3rem; line-height: 1; }
+        }
+
+        
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; font-size: 11pt; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col antialiased">
+
+    <!-- Header & Logos Section -->
+    <header class="bg-slate-900 text-white shadow-lg border-b-4 border-amber-500 no-print">
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex flex-col md:flex-row justify-between md:items-center gap-2 sm:gap-4">
+
+            <!-- Initiative + institutions merged -->
+            <div class="flex flex-col gap-1.5">
+                <div class="flex items-center gap-2.5">
+                    <div class="shrink-0 w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-600 to-rose-700 flex items-center justify-center text-lg sm:text-2xl shadow-lg ring-2 ring-rose-400/50">🫀</div>
+                    <div class="min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <h1 class="text-lg sm:text-2xl font-black tracking-tight text-white leading-tight">مبادرة "قلبك أمانة"</h1>
+                            <span class="bg-red-600 text-white text-[10px] sm:text-[11px] px-2 py-0.5 rounded-full font-bold">مصر 2026</span>
+                        </div>
+                        <p class="hidden sm:block text-xs text-slate-300 font-medium mt-0.5">منظومة تقييم وإدارة خطورة أمراض القلب والسكري (بروتوكولات WHO / MOHP)</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] sm:text-xs text-slate-300 font-semibold leading-snug">
+                    <span>🏛️ محافظة دمياط</span><span class="text-slate-600">•</span>
+                    <span>🏥 إدارة فارسكور الصحية</span><span class="text-slate-600">•</span>
+                    <span class="text-amber-300">🩺 مركز تفتيش السرو</span>
+                </div>
+            </div>
+
+            <!-- Doctor Badge (compact) -->
+            <div class="w-full md:w-auto rounded-xl p-[1px] bg-gradient-to-br from-amber-400/70 via-amber-500/20 to-amber-400/60 shadow-lg">
+                <div class="rounded-xl bg-slate-900 px-3 py-2">
+                    <div class="flex items-center gap-2.5">
+                        <div class="shrink-0 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-slate-950 ring-2 ring-amber-300/40">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></svg>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-sm sm:text-base font-black text-white leading-tight">د. محمد فايز</span>
+                                <span class="text-[10px] font-extrabold tracking-widest px-1.5 py-0.5 rounded bg-amber-500 text-slate-950">GP</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 font-semibold tracking-wide" dir="ltr" style="text-align:right">Dr. Mohamed Fayez<span class="hidden sm:inline"> · General Practitioner</span></div>
+                        </div>
+                        <a href="https://wa.me/201028945823" class="shrink-0 inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2.5 py-1" style="min-height:0">
+                            <span>💬</span><span dir="ltr">01028945823</span>
+                        </a>
+                    </div>
+                    <div class="mt-1.5 text-[10px] font-bold text-amber-300/90 text-center">#نساعد_فنسعد</div>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- Main Mobile-First Container -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+        <!-- LEFT/TOP: Input Controls -->
+        <section class="lg:col-span-5 space-y-4 no-print">
+            
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">نوع التقييم المتاح للمريض:</label>
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl">
+                    <button type="button" id="btnLabMode" onclick="setMode('lab')" class="py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-emerald-600 text-white shadow">
+                        <span>🧪</span> بالتحاليل (Lab)
+                    </button>
+                    <button type="button" id="btnBmiMode" onclick="setMode('bmi')" class="py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-200">
+                        <span>⚖️</span> بدون تحاليل (BMI)
+                    </button>
+                </div>
+                <p id="modeDesc" class="text-[11px] text-slate-500 mt-2 font-medium">
+                    * التقييم المعملي الدقيق باستخدام قياسات الكوليسترول الكلي (mg/dL).
+                </p>
+            </div>
+
+            <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="border-b border-slate-100 pb-3 mb-4 flex justify-between items-center">
+                    <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                        <span>📝</span> بيانات وحالة المريض
+                    </h2>
+                    <button type="button" onclick="resetForm()" class="text-xs text-red-600 hover:underline font-bold">إعادة ضبط</button>
+                </div>
+
+                <form id="cvdForm" onchange="calculateRisk()" oninput="calculateRisk()" class="space-y-4">
+                    
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">1. حالة السكري (Diabetes) <span id="mark-diabetes" class="req-mark"></span></label>
+                        <div id="grp-diabetes" class="grid grid-cols-2 gap-2">
+                            <label class="cursor-pointer border-2 rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs font-bold transition hover:bg-slate-50 has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-600 has-[:checked]:text-emerald-900">
+                                <input type="radio" name="diabetes" value="no" class="accent-emerald-600">
+                                بدون سكري
+                            </label>
+                            <label class="cursor-pointer border-2 rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs font-bold transition hover:bg-slate-50 has-[:checked]:bg-rose-50 has-[:checked]:border-red-600 has-[:checked]:text-red-900">
+                                <input type="radio" name="diabetes" value="yes" class="accent-red-600">
+                                مريض سكري
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">2. النوع (Gender) <span id="mark-gender" class="req-mark"></span></label>
+                            <select id="gender" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl p-2.5 text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                                <option value="" selected disabled>اختر النوع...</option>
+                                <option value="male">رجل (Male)</option>
+                                <option value="female">أنثى (Female)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1.5">3. الفئة العمرية <span id="mark-age" class="req-mark"></span></label>
+                            <select id="age" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl p-2.5 text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                                <option value="" selected disabled>اختر الفئة العمرية...</option>
+                                <option value="40-44">40 - 44 سنة</option>
+                                <option value="45-49">45 - 49 سنة</option>
+                                <option value="50-54">50 - 54 سنة</option>
+                                <option value="55-59">55 - 59 سنة</option>
+                                <option value="60-64">60 - 64 سنة</option>
+                                <option value="65-69">65 - 69 سنة</option>
+                                <option value="70-74">70 - 74 سنة</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">4. التدخين (Smoking) <span id="mark-smoker" class="req-mark"></span></label>
+                        <div id="grp-smoker" class="grid grid-cols-2 gap-2">
+                            <label class="cursor-pointer border-2 rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs font-bold transition hover:bg-slate-50 has-[:checked]:bg-emerald-50 has-[:checked]:border-emerald-600 has-[:checked]:text-emerald-900">
+                                <input type="radio" name="smoker" value="no" class="accent-emerald-600">
+                                غير مدخن
+                            </label>
+                            <label class="cursor-pointer border-2 rounded-xl p-2.5 flex items-center justify-center gap-2 text-xs font-bold transition hover:bg-slate-50 has-[:checked]:bg-amber-50 has-[:checked]:border-amber-600 has-[:checked]:text-amber-900">
+                                <input type="radio" name="smoker" value="yes" class="accent-amber-600">
+                                مدخن حالي
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">5. ضغط الدم الانقباضي (Systolic BP) <span id="mark-sbp" class="req-mark"></span></label>
+                        <select id="sbp" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl p-2.5 text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                                <option value="" selected disabled>اختر مستوى الضغط...</option>
+                            <option value="<120">أقل من 120 mmHg</option>
+                            <option value="120-139">120 - 139 mmHg</option>
+                            <option value="140-159">140 - 159 mmHg</option>
+                            <option value="160-179">160 - 179 mmHg</option>
+                            <option value=">=180">180 mmHg فأكثر (مرتفع جداً)</option>
+                        </select>
+                    </div>
+
+                    <div id="cholSection">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">6. الكوليسترول الكلي (Total Cholesterol in mg/dL) <span id="mark-chol" class="req-mark"></span></label>
+                        <select id="cholMgdl" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl p-2.5 text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                                <option value="" selected disabled>اختر مستوى الكوليسترول...</option>
+                            <option value="<4">أقل من 154 mg/dL (&lt;4 mmol/L)</option>
+                            <option value="4-4.9">154 - 189 mg/dL (4 - 4.9 mmol/L)</option>
+                            <option value="5-5.9">190 - 229 mg/dL (5 - 5.9 mmol/L)</option>
+                            <option value="6-6.9">230 - 269 mg/dL (6 - 6.9 mmol/L)</option>
+                            <option value=">=7">270 mg/dL فأكثر (&ge;7 mmol/L)</option>
+                        </select>
+                    </div>
+
+                    <div id="bmiSection" class="hidden">
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">6. فئة مؤشر كتلة الجسم (BMI Bucket) <span id="mark-bmi" class="req-mark"></span></label>
+                        <select id="bmiBucket" class="w-full bg-slate-50 border-2 border-slate-200 text-slate-800 rounded-xl p-2.5 text-xs font-bold focus:border-emerald-500 focus:outline-none">
+                                <option value="" selected disabled>اختر فئة BMI...</option>
+                            <option value="<20">أقل من 20 kg/m²</option>
+                            <option value="20-24">20 - 24 kg/m² (طبيعي)</option>
+                            <option value="25-29">25 - 29 kg/m² (زيادة وزن)</option>
+                            <option value="30-34">30 - 34 kg/m² (سمنة درجة 1)</option>
+                            <option value=">=35">35 kg/m² فأكثر (سمنة مفرطة)</option>
+                        </select>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- BMI Quick Calculator -->
+            <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-slate-700">
+                <div class="flex items-center justify-between border-b border-slate-700 pb-2 mb-3">
+                    <h3 class="text-sm font-extrabold flex items-center gap-2 text-amber-400">
+                        <span>⚖️</span> حاسبة مؤشر كتلة الجسم (BMI Quick Calc)
+                    </h3>
+                    <span id="bmiResultBadge" class="text-[10px] font-bold bg-slate-700 px-2.5 py-1 rounded-full text-slate-200"> — </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block text-[11px] text-slate-300 font-bold mb-1">الوزن (كجم):</label>
+                        <input type="number" id="bmiWeight" value="" placeholder="مثال: 70" min="30" max="250" oninput="calcBmi()" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg p-2 text-xs font-bold text-center">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-slate-300 font-bold mb-1">الطول (سم):</label>
+                        <input type="number" id="bmiHeight" value="" placeholder="مثال: 170" min="100" max="230" oninput="calcBmi()" class="w-full bg-slate-800 border border-slate-600 text-white rounded-lg p-2 text-xs font-bold text-center">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between bg-slate-950/70 p-2.5 rounded-xl border border-slate-800">
+                    <div>
+                        <div class="text-[10px] text-slate-400 font-bold">النتيجة الحالية:</div>
+                        <div id="bmiValueText" class="text-lg font-black text-amber-400">-- kg/m²</div>
+                    </div>
+                    <button type="button" onclick="applyBmiToForm()" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-black rounded-lg transition shadow">
+                        تطبيق في التقييم 👈
+                    </button>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT/BOTTOM: Results & Action Directives -->
+        <section class="lg:col-span-7 space-y-4">
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 transition-all" id="resultCard">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">مستوى الخطورة خلال 10 سنوات (10-Yr Risk)</span>
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                            <h2 id="riskPercent" class="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight">--%</h2>
+
+                            <span id="riskCategoryLabel" class="text-xs font-extrabold px-3.5 py-1.5 rounded-full text-white bg-slate-600 shadow-sm">
+                                يتم الحساب...
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-left bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                        <div class="text-[11px] text-slate-500 font-bold">منطقة منظمة الصحة العالمية:</div>
+                        <div class="text-xs font-black text-slate-800">شمال أفريقيا والشرق الأوسط (مصر)</div>
+                        <div id="modelTypeText" class="text-[10px] font-bold text-emerald-700 mt-0.5">نموذج التحاليل المعملية</div>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-2">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-center">
+                        <div class="text-[11px] text-slate-500 font-bold">الخطورة</div>
+                        <div id="sheetRisk" class="text-2xl font-black text-slate-900 leading-tight">--%</div>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 text-center">
+                        <div class="text-[11px] text-emerald-800 font-bold">موعد الزيارة القادمة</div>
+                        <div id="sheetDate" dir="ltr" class="text-2xl font-black text-emerald-900 leading-tight">--/--/----</div>
+                        <div id="sheetInterval" class="text-[10px] text-emerald-700 font-bold"></div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex justify-between text-xs font-bold text-slate-600 mb-1">
+                        <span>نطاق خطورة الوعائية القلبية</span>
+                        <span id="chartGridPosText" class="text-slate-800">قيمة الخلية: --%</span>
+                    </div>
+                    <div class="grid grid-cols-5 gap-1.5 h-3.5 rounded-full overflow-hidden bg-slate-100 p-0.5 border border-slate-200">
+                        <div id="bar-low" class="bg-emerald-500 opacity-20 transition-all rounded-r-full"></div>
+                        <div id="bar-mod" class="bg-yellow-500 opacity-20 transition-all"></div>
+                        <div id="bar-high" class="bg-orange-500 opacity-20 transition-all"></div>
+                        <div id="bar-vhigh" class="bg-red-600 opacity-20 transition-all"></div>
+                        <div id="bar-extr" class="bg-rose-950 opacity-20 transition-all rounded-l-full"></div>
+                    </div>
+                    <div class="grid grid-cols-5 gap-1.5 text-[11px] sm:text-xs text-slate-500 font-bold mt-1.5 text-center leading-tight">
+                        <span>&lt;5%<br>منخفض</span>
+                        <span>5-10%<br>متوسط</span>
+                        <span>10-20%<br>عالي</span>
+                        <span>20-30%<br>عالي جداً</span>
+                        <span>&ge;30%<br>حرج</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+                    <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                        <span>🩺</span> التوجيهات العلاجية ومواعيد المتابعة والتحويل
+                    </h3>
+                    <div class="flex gap-2 no-print w-full sm:w-auto">
+                        <button onclick="copyClinicalNote()" class="flex-1 sm:flex-none px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition flex items-center justify-center gap-1">
+                            <span>📋</span> نسخ التقرير
+                        </button>
+                        <button onclick="printReport()" class="flex-1 sm:flex-none px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition flex items-center justify-center gap-1 shadow">
+                            <span>🖨️</span> طباعة التقرير
+                        </button>
+                    </div>
+                </div>
+
+                <div id="protocolOutput" class="space-y-3">
+                    <!-- Dynamic Management Directives Loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Disclaimer Footer Card -->
+            <div class="bg-amber-50 border border-amber-300 text-amber-900 p-3.5 rounded-xl text-xs font-medium no-print">
+                <div class="font-bold mb-0.5 flex items-center gap-1">
+                    <span>⚠️</span> إخلاء مسؤولية (Disclaimer):
+                </div>
+                هذه الأداة لا تزال <strong>تحت الاختبار والتطوير المستمر</strong>، وهي مخصصة حصرياً للاستخدام الإرشادي والمساعد لأطباء الرعاية الصحية الأولية بالوحدات الريفية، ولا تغني عن التقييم الإكلينيكي الشامل والرجوع للبروتوكولات الرسمية المعتمدة لوزارة الصحة والسكان.
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Sticky mobile result bar -->
+    <div id="mobileBar" class="lg:hidden no-print fixed bottom-0 inset-x-0 z-50 bg-slate-900 text-white border-t-2 border-amber-500 shadow-2xl" style="padding-bottom: env(safe-area-inset-bottom, 0px)">
+        <button type="button" onclick="document.getElementById('resultCard').scrollIntoView({behavior:'smooth', block:'start'})" class="w-full flex items-center justify-between gap-2 px-3 py-2 text-right">
+            <div class="text-center">
+                <div class="text-[10px] text-slate-300 font-bold">الخطورة</div>
+                <div id="mobileRisk" class="text-2xl font-black leading-none">--%</div>
+            </div>
+            <div class="w-px self-stretch bg-slate-700"></div>
+            <div class="text-center">
+                <div class="text-[10px] text-amber-300 font-bold">الزيارة القادمة</div>
+                <div id="mobileNext" dir="ltr" class="text-xl font-black leading-none text-amber-300">--/--/----</div>
+            </div>
+            <span id="mobileCat" class="text-[11px] font-extrabold px-2.5 py-1.5 rounded-full bg-slate-600 text-white text-center leading-tight">--</span>
+        </button>
+    </div>
+
+    <!-- PRINTABLE SUMMARY SHEET -->
+    <div class="hidden print-only p-8 max-w-3xl mx-auto bg-white text-slate-900">
+        <div class="border-b-2 border-slate-900 pb-4 mb-4 text-center">
+            <h1 class="text-xl font-black uppercase">وزارة الصحة والسكان - مديرية الشئون الصحية بدمياط</h1>
+            <h2 class="text-base font-bold">إدارة فارسكور الصحية • مركز تفتيش السرو لطب الأسرة</h2>
+            <h3 class="text-sm font-semibold text-rose-700">مبادرة "قلبك أمانة" - تقرير تقييم خطر أمراض القلب والسكري</h3>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 text-xs mb-4 border p-3 rounded-xl bg-slate-50">
+            <div><strong>تاريخ التقييم:</strong> <span id="printDate"></span></div>
+            <div><strong>الطبيب الفاحص:</strong> د. محمد فايز - GP (💬 01028945823)</div>
+            <div><strong>سن / نوع المريض:</strong> <span id="printAgeGender"></span></div>
+            <div><strong>حالة السكري:</strong> <span id="printDiabetes"></span></div>
+            <div><strong>موقف التدخين:</strong> <span id="printSmoking"></span></div>
+            <div><strong>ضغط الدم الانقباضي:</strong> <span id="printSBP"></span></div>
+            <div><strong>الكوليسترول / BMI:</strong> <span id="printCholBmi"></span></div>
+            <div><strong>نوع النموذج المستخدم:</strong> <span id="printModel"></span></div>
+        </div>
+
+        <div class="mb-4 p-4 border-2 rounded-xl text-center bg-slate-50" id="printRiskBox">
+            <div class="text-xs font-bold uppercase text-slate-500">نتيجة تقييم الخطورة خلال 10 سنوات</div>
+            <div class="text-3xl font-black my-1" id="printRiskVal"></div>
+            <div class="text-xs italic font-bold" id="printRiskDesc"></div>
+        </div>
+
+        <div class="space-y-3 text-xs">
+            <h4 class="font-bold underline text-sm">التوجيهات العلاجية وخطة الخطة الطبية للمريض:</h4>
+            <div id="printDirectives"></div>
+        </div>
+
+        <div class="mt-8 p-3 bg-slate-100 rounded-lg text-[10px] text-slate-700 border">
+            <strong>إخلاء مسؤولية:</strong> هذه الأداة تحت الاختبار ومخصصة لدعم القرار الإكلينيكي الاسترشادي فقط.
+        </div>
+
+        <div class="mt-6 pt-4 border-t flex justify-between text-xs font-bold">
+            <div>توقيع الطبيب: د. محمد فايز - GP (💬 01028945823 - #نساعد_فنسعد)</div>
+            <div>تاريخ الزيارة القادمة: <span id="printNextDate"></span></div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'lab';
+
+        // ===== جداول مستخرجة حرفياً من ملف PDF (WHO CVD risk charts - North Africa & Middle East / Egypt) =====
+        // الهيكل: [الجنس][مدخن/غير][الفئة العمرية][صف الضغط: 0=<120, 1=120-139, 2=140-159, 3=160-179, 4=>=180][العمود]
+        // الأعمدة في الجداول المعملية: الكوليسترول <4 | 4-4.9 | 5-5.9 | 6-6.9 | >=7 (mmol/L)
+        // الأعمدة في الجدول بدون تحاليل: BMI <20 | 20-24 | 25-29 | 30-34 | >=35 (kg/m2)
+        const dbLabWithoutDiabetes = {"male":{"nonSmoker":{"70-74":[[18,19,21,24,26],[21,23,26,28,31],[26,28,31,34,37],[31,33,36,40,43],[37,40,43,46,50]],"65-69":[[13,14,16,18,20],[16,17,19,22,24],[19,21,24,26,29],[24,26,29,32,35],[29,32,35,38,42]],"60-64":[[9,10,11,13,15],[11,13,14,16,19],[14,16,18,20,23],[18,20,23,25,29],[23,25,28,31,35]],"55-59":[[6,7,8,10,11],[8,9,11,12,14],[11,12,14,16,18],[14,16,18,20,23],[18,20,22,25,29]],"50-54":[[4,5,6,7,8],[6,7,8,9,11],[8,9,10,12,14],[10,12,14,16,18],[14,16,18,20,23]],"45-49":[[3,4,4,5,6],[4,5,6,7,8],[6,7,8,9,11],[8,9,10,12,14],[11,12,14,16,19]],"40-44":[[2,3,3,4,5],[3,4,4,5,6],[4,5,6,7,8],[6,7,8,9,11],[8,9,11,13,15]]},"smoker":{"70-74":[[22,24,27,30,33],[27,29,32,35,39],[32,35,38,42,45],[38,41,45,48,52],[45,48,52,56,60]],"65-69":[[17,19,21,24,27],[21,23,26,29,32],[26,29,32,35,39],[31,35,38,42,46],[38,41,45,49,54]],"60-64":[[13,15,17,19,22],[16,19,21,24,27],[21,23,26,29,33],[26,29,32,36,40],[32,35,39,43,48]],"55-59":[[10,11,13,15,18],[13,15,17,19,22],[16,19,21,24,28],[21,24,27,30,35],[27,30,34,38,42]],"50-54":[[7,9,10,12,14],[10,11,13,16,18],[13,15,17,20,24],[17,19,22,26,30],[22,25,29,33,37]],"45-49":[[6,7,8,10,12],[8,9,11,13,15],[10,12,14,17,20],[14,16,18,22,25],[19,21,24,28,33]],"40-44":[[4,5,6,8,9],[6,7,8,10,12],[8,9,11,14,16],[11,13,15,18,22],[15,18,20,24,28]]}},"female":{"nonSmoker":{"70-74":[[16,17,18,19,20],[19,20,21,22,23],[22,23,24,25,26],[26,27,28,29,30],[29,31,32,33,34]],"65-69":[[12,13,13,14,15],[14,15,16,17,18],[17,18,19,20,21],[20,21,22,23,24],[23,25,26,27,29]],"60-64":[[9,9,10,11,11],[11,11,12,13,14],[13,14,14,15,16],[15,16,17,18,20],[19,20,21,22,23]],"55-59":[[6,7,7,8,9],[8,8,9,10,11],[10,10,11,12,13],[12,13,14,15,16],[15,16,17,18,19]],"50-54":[[5,5,5,6,7],[6,6,7,7,8],[7,8,9,9,10],[9,10,11,12,13],[11,12,13,14,16]],"45-49":[[3,4,4,4,5],[4,5,5,6,6],[5,6,7,7,8],[7,8,8,9,10],[9,10,11,12,13]],"40-44":[[2,3,3,3,4],[3,3,4,4,5],[4,4,5,6,6],[5,6,6,7,8],[7,8,8,9,10]]},"smoker":{"70-74":[[22,23,24,25,26],[26,27,28,29,30],[30,31,32,33,35],[34,35,36,38,39],[39,40,41,43,45]],"65-69":[[18,19,20,21,22],[21,22,23,24,26],[24,26,27,28,30],[29,30,31,33,35],[33,35,36,38,40]],"60-64":[[14,15,16,17,18],[17,18,19,20,22],[20,21,23,24,26],[24,25,27,29,30],[28,30,32,34,36]],"55-59":[[11,12,13,14,15],[13,14,16,17,18],[16,18,19,20,22],[20,21,23,25,27],[24,26,28,30,32]],"50-54":[[9,9,10,11,13],[11,12,13,14,15],[13,14,16,17,19],[17,18,19,21,23],[20,22,24,26,28]],"45-49":[[7,7,8,9,10],[9,9,10,12,13],[11,12,13,15,16],[14,15,16,18,20],[17,19,21,23,25]],"40-44":[[5,6,7,8,9],[7,8,9,10,11],[9,10,11,12,14],[11,13,14,16,17],[15,16,18,20,22]]}}};
+
+        const dbLabWithDiabetes = {"male":{"nonSmoker":{"70-74":[[24,26,29,32,35],[29,31,35,38,42],[34,37,41,44,48],[40,44,48,52,56],[47,51,55,59,63]],"65-69":[[18,21,23,26,29],[23,25,28,31,35],[28,31,34,37,41],[34,37,40,45,49],[40,44,48,52,57]],"60-64":[[14,16,18,21,23],[18,20,22,25,29],[22,25,28,31,35],[28,31,34,38,42],[34,38,42,46,51]],"55-59":[[11,12,14,16,19],[14,16,18,21,24],[18,20,23,26,30],[23,25,29,32,37],[29,32,36,40,45]],"50-54":[[8,9,11,13,15],[11,12,14,16,19],[14,16,18,21,25],[18,21,24,27,31],[24,27,30,34,39]],"45-49":[[6,7,8,10,12],[8,10,11,13,16],[11,13,15,17,21],[15,17,20,23,27],[20,23,26,30,34]],"40-44":[[5,5,6,8,10],[6,7,9,10,13],[9,10,12,14,17],[12,14,16,19,22],[17,19,22,25,30]]},"smoker":{"70-74":[[30,33,36,40,44],[36,39,43,47,51],[42,46,50,54,58],[49,53,57,61,66],[57,61,65,69,73]],"65-69":[[25,28,31,34,38],[30,33,37,41,46],[36,40,44,48,53],[43,48,52,56,61],[51,56,60,65,70]],"60-64":[[20,23,26,30,34],[25,28,32,36,41],[31,35,39,43,48],[38,42,47,52,57],[46,51,55,61,66]],"55-59":[[17,19,22,25,29],[21,24,27,31,36],[27,30,34,39,44],[34,38,42,47,53],[42,46,51,56,62]],"50-54":[[13,16,18,21,25],[18,20,23,27,32],[23,26,30,34,40],[29,33,38,43,48],[37,42,47,52,58]],"45-49":[[11,13,15,18,22],[15,17,20,24,28],[19,22,26,30,36],[26,29,33,38,44],[33,38,42,48,55]],"40-44":[[9,10,13,15,19],[12,14,17,20,25],[16,19,22,27,32],[22,26,30,35,41],[30,34,39,44,51]]}},"female":{"nonSmoker":{"70-74":[[24,25,26,27,28],[27,28,30,31,32],[31,33,34,35,37],[36,37,39,40,42],[41,42,44,45,47]],"65-69":[[19,20,21,22,23],[22,23,24,26,27],[26,27,28,30,31],[30,31,33,35,36],[35,36,38,40,42]],"60-64":[[14,15,16,18,19],[17,18,20,21,23],[21,22,23,25,27],[25,26,28,30,31],[29,31,33,35,37]],"55-59":[[11,12,13,14,15],[14,15,16,17,19],[17,18,19,21,23],[20,22,23,25,27],[25,26,28,30,32]],"50-54":[[9,9,10,11,13],[11,12,13,14,15],[13,15,16,17,19],[17,18,20,21,23],[21,22,24,26,28]],"45-49":[[7,7,8,9,10],[8,9,10,11,13],[11,12,13,14,16],[14,15,16,18,20],[17,19,21,23,25]],"40-44":[[5,6,6,7,8],[7,7,8,9,10],[9,10,11,12,13],[11,12,14,15,17],[15,16,18,19,21]]},"smoker":{"70-74":[[31,33,34,35,37],[36,37,39,40,42],[41,42,44,46,47],[46,48,50,51,53],[52,54,55,57,59]],"65-69":[[27,28,30,31,33],[31,33,34,36,38],[36,38,40,42,44],[42,43,45,48,50],[48,50,52,54,56]],"60-64":[[23,24,26,28,30],[27,29,30,32,35],[32,34,36,38,40],[37,39,42,44,47],[43,46,48,51,53]],"55-59":[[19,21,22,24,26],[23,25,27,29,31],[28,30,32,34,37],[33,36,38,41,43],[40,42,45,47,51]],"50-54":[[16,18,19,21,23],[20,22,24,26,28],[24,26,29,31,34],[30,32,35,37,40],[36,38,41,44,48]],"45-49":[[14,15,17,19,21],[17,19,21,23,26],[21,23,26,28,31],[26,29,31,34,38],[32,35,38,41,45]],"40-44":[[11,13,14,16,19],[14,16,18,20,23],[18,20,23,25,28],[23,26,28,31,35],[29,32,35,39,42]]}}};
+
+        // الجدول غير المعملي (Non-laboratory-based) لا يفرّق بين مريض السكري وغيره
+        const dbNonLab = {"male":{"nonSmoker":{"70-74":[[19,20,22,23,25],[23,25,26,28,30],[28,30,32,34,36],[33,35,38,40,42],[40,42,44,47,50]],"65-69":[[13,15,16,17,19],[17,18,20,22,23],[21,22,24,27,29],[26,28,30,32,35],[31,34,36,39,42]],"60-64":[[9,10,12,13,14],[12,13,15,16,18],[15,17,19,21,23],[19,21,24,26,29],[25,27,30,32,36]],"55-59":[[6,7,8,9,11],[9,10,11,12,14],[11,13,14,16,18],[15,16,18,21,23],[19,21,24,27,30]],"50-54":[[4,5,6,7,8],[6,7,8,9,11],[8,9,11,12,14],[11,13,14,16,19],[15,17,19,22,25]],"45-49":[[3,4,4,5,6],[4,5,6,7,8],[6,7,8,9,11],[8,10,11,13,15],[11,13,15,17,20]],"40-44":[[2,3,3,4,4],[3,4,4,5,6],[4,5,6,7,9],[6,7,8,10,12],[9,10,12,14,17]]},"smoker":{"70-74":[[24,26,28,30,32],[29,31,33,36,38],[35,37,40,42,45],[42,44,47,49,52],[49,51,54,57,60]],"65-69":[[19,20,22,24,26],[23,25,27,30,32],[28,31,33,36,39],[35,37,40,43,47],[42,45,48,51,55]],"60-64":[[14,16,18,20,22],[18,20,22,25,27],[23,25,28,31,34],[28,31,34,38,41],[35,39,42,46,50]],"55-59":[[11,12,14,16,18],[14,16,18,20,23],[18,20,23,26,29],[23,26,29,33,37],[30,33,37,41,45]],"50-54":[[8,9,11,13,15],[11,12,14,17,19],[14,16,19,22,25],[19,22,25,28,32],[25,28,32,36,41]],"45-49":[[6,7,8,10,12],[8,10,11,14,16],[11,13,15,18,21],[15,18,21,24,28],[21,24,27,32,37]],"40-44":[[4,5,7,8,10],[6,8,9,11,13],[9,11,13,15,18],[12,15,17,21,25],[17,20,24,28,33]]}},"female":{"nonSmoker":{"70-74":[[18,19,19,20,21],[21,22,23,23,24],[25,25,26,27,28],[29,29,30,31,32],[33,34,35,36,37]],"65-69":[[13,14,15,15,16],[16,17,17,18,19],[19,20,21,21,22],[23,24,24,25,26],[27,28,29,30,31]],"60-64":[[10,10,11,11,12],[12,13,13,14,14],[15,15,16,17,17],[18,19,19,20,21],[22,23,23,24,25]],"55-59":[[7,8,8,8,9],[9,9,10,10,11],[11,12,12,13,14],[14,15,15,16,17],[18,18,19,20,21]],"50-54":[[5,6,6,6,7],[7,7,7,8,8],[9,9,10,10,11],[11,12,12,13,13],[14,15,15,16,17]],"45-49":[[4,4,4,5,5],[5,5,6,6,6],[7,7,7,8,8],[9,9,10,10,11],[11,12,12,13,14]],"40-44":[[3,3,3,3,4],[4,4,4,5,5],[5,5,6,6,6],[7,7,7,8,8],[9,9,10,11,11]]},"smoker":{"70-74":[[25,26,26,27,28],[29,30,30,31,32],[33,34,35,36,37],[38,39,40,41,42],[43,44,46,47,48]],"65-69":[[20,21,22,22,23],[24,25,25,26,27],[28,29,30,31,32],[33,34,35,36,37],[38,39,41,42,43]],"60-64":[[16,17,18,18,19],[19,20,21,22,23],[23,24,25,27,28],[28,29,30,32,33],[34,35,36,37,39]],"55-59":[[13,13,14,15,16],[16,17,18,18,19],[20,21,22,23,24],[24,25,26,28,29],[29,31,32,33,35]],"50-54":[[10,11,11,12,13],[13,14,14,15,16],[16,17,18,19,20],[20,21,23,24,25],[26,27,28,29,31]],"45-49":[[8,9,9,10,11],[10,11,12,13,14],[13,14,15,16,17],[17,18,19,21,22],[22,23,25,26,28]],"40-44":[[6,7,7,8,9],[8,9,10,10,11],[11,12,13,14,15],[15,16,17,18,19],[19,20,22,23,24]]}}};
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btnLab = document.getElementById('btnLabMode');
+            const btnBmi = document.getElementById('btnBmiMode');
+            const cholSec = document.getElementById('cholSection');
+            const bmiSec = document.getElementById('bmiSection');
+            const modeDesc = document.getElementById('modeDesc');
+            const modelType = document.getElementById('modelTypeText');
+
+            if(mode === 'lab') {
+                btnLab.className = "py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-emerald-600 text-white shadow";
+                btnBmi.className = "py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-200";
+                cholSec.classList.remove('hidden');
+                bmiSec.classList.add('hidden');
+                modeDesc.innerText = "* التقييم المعملي (Laboratory chart) باستخدام الكوليسترول الكلي، مع جدول مستقل لمرضى السكري.";
+                modelType.innerText = "نموذج التحاليل المعملية (Lab Model)";
+            } else {
+                btnBmi.className = "py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 bg-emerald-600 text-white shadow";
+                btnLab.className = "py-2.5 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-slate-200";
+                bmiSec.classList.remove('hidden');
+                cholSec.classList.add('hidden');
+                modeDesc.innerText = "* التقييم بدون تحاليل (Non-laboratory chart) اعتماداً على BMI. هذا الجدول في WHO لا يتضمن متغير السكري، لذا لا يؤثر السكري على الرقم هنا.";
+                modelType.innerText = "نموذج بدون تحاليل (BMI Model)";
+            }
+            calculateRisk();
+        }
+
+        function getSbpIndex(sbpVal) {
+            switch(sbpVal) {
+                case '<120': return 0;
+                case '120-139': return 1;
+                case '140-159': return 2;
+                case '160-179': return 3;
+                case '>=180': return 4;
+                default: return 1;
+            }
+        }
+
+        function getCholIndex(cholVal) {
+            switch(cholVal) {
+                case '<4': return 0;
+                case '4-4.9': return 1;
+                case '5-5.9': return 2;
+                case '6-6.9': return 3;
+                case '>=7': return 4;
+                default: return 1;
+            }
+        }
+
+        function getBmiIndex(bmiVal) {
+            switch(bmiVal) {
+                case '<20': return 0;
+                case '20-24': return 1;
+                case '25-29': return 2;
+                case '30-34': return 3;
+                case '>=35': return 4;
+                default: return 1;
+            }
+        }
+
+        function formatDate(date) {
+            const d = date.getDate();
+            const m = date.getMonth() + 1;
+            const y = date.getFullYear();
+            return `${d}/${m}/${y}`;
+        }
+
+        function calcBmi() {
+            const w = parseFloat(document.getElementById('bmiWeight').value) || 0;
+            const hCm = parseFloat(document.getElementById('bmiHeight').value) || 0;
+            const badge = document.getElementById('bmiResultBadge');
+            if(w > 0 && hCm > 0) {
+                const hM = hCm / 100;
+                const bmi = w / (hM * hM);
+                document.getElementById('bmiValueText').innerText = `${bmi.toFixed(1)} kg/m²`;
+                const bucketSelect = document.getElementById('bmiBucket');
+
+                if(bmi < 20) {
+                    badge.innerText = "نحافة";
+                    badge.className = "text-[10px] font-bold bg-blue-500 px-2.5 py-1 rounded-full text-white";
+                    bucketSelect.value = "<20";
+                } else if(bmi < 25) {
+                    badge.innerText = "وزن طبيعي";
+                    badge.className = "text-[10px] font-bold bg-emerald-500 px-2.5 py-1 rounded-full text-white";
+                    bucketSelect.value = "20-24";
+                } else if(bmi < 30) {
+                    badge.innerText = "زيادة وزن";
+                    badge.className = "text-[10px] font-bold bg-amber-500 px-2.5 py-1 rounded-full text-slate-950";
+                    bucketSelect.value = "25-29";
+                } else if(bmi < 35) {
+                    badge.innerText = "سمنة درجة 1";
+                    badge.className = "text-[10px] font-bold bg-orange-600 px-2.5 py-1 rounded-full text-white";
+                    bucketSelect.value = "30-34";
+                } else {
+                    badge.innerText = "سمنة مفرطة";
+                    badge.className = "text-[10px] font-bold bg-red-600 px-2.5 py-1 rounded-full text-white";
+                    bucketSelect.value = ">=35";
+                }
+                if (currentMode === 'bmi') calculateRisk();
+            } else {
+                document.getElementById('bmiValueText').innerText = '-- kg/m²';
+                badge.innerText = ' — ';
+                badge.className = "text-[10px] font-bold bg-slate-700 px-2.5 py-1 rounded-full text-slate-200";
+            }
+        }
+
+        function applyBmiToForm() {
+            setMode('bmi');
+            calculateRisk();
+        }
+
+        let formComplete = false;
+
+        const MARK_TARGETS = { diabetes:'grp-diabetes', smoker:'grp-smoker', gender:'gender', age:'age', sbp:'sbp', chol:'cholMgdl', bmi:'bmiBucket' };
+
+        function setMark(key, ok) {
+            const m = document.getElementById('mark-' + key);
+            if (m) m.innerHTML = ok ? '<span class="ok">✓</span>' : '<span class="miss">⚠ مطلوب</span>';
+            const t = document.getElementById(MARK_TARGETS[key]);
+            if (t) {
+                const cls = (key === 'diabetes' || key === 'smoker') ? 'missing-group' : 'missing-field';
+                if (ok) t.classList.remove(cls); else t.classList.add(cls);
+            }
+        }
+
+        function showEmptyState(missing) {
+            document.getElementById('riskPercent').innerText = '--%';
+            const catLabel = document.getElementById('riskCategoryLabel');
+            catLabel.innerText = `في انتظار استكمال البيانات (ناقص ${missing.length})`;
+            catLabel.className = 'text-xs font-extrabold px-3.5 py-1.5 rounded-full text-white bg-slate-500 shadow-sm';
+            document.getElementById('chartGridPosText').innerText = 'قيمة الخلية: --';
+            document.getElementById('sheetRisk').innerText = '--%';
+            document.getElementById('sheetDate').innerText = '--/--/----';
+            document.getElementById('sheetInterval').innerText = '';
+            document.getElementById('mobileRisk').innerText = '--%';
+            document.getElementById('mobileNext').innerText = '--/--/----';
+            const mc = document.getElementById('mobileCat');
+            mc.innerText = 'أكمل البيانات';
+            mc.className = 'text-[11px] font-extrabold px-2.5 py-1.5 rounded-full text-white text-center leading-tight bg-slate-500';
+            ['low', 'mod', 'high', 'vhigh', 'extr'].forEach(b => {
+                document.getElementById(`bar-${b}`).style.opacity = "0.2";
+            });
+            const chips = missing.map(m => `<span class="inline-block bg-red-100 text-red-700 border border-red-200 rounded-full px-2.5 py-0.5 text-xs font-extrabold m-0.5">⚠ ${m}</span>`).join('');
+            document.getElementById('protocolOutput').innerHTML = `
+                <div class="p-4 bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl text-center">
+                    <div class="text-2xl mb-1">📝</div>
+                    <div class="font-extrabold text-sm text-amber-900">أكمل بيانات المريض لعرض النتيجة والتوجيهات</div>
+                    <div class="text-xs text-amber-800 font-bold mt-2">لم يتم اختيار:</div>
+                    <div class="mt-1">${chips}</div>
+                </div>`;
+        }
+
+        function printReport() {
+            if (!formComplete) { alert('أكمل كل بيانات المريض أولاً قبل الطباعة'); return; }
+            window.print();
+        }
+
+        function calculateRisk() {
+            const dEl = document.querySelector('input[name="diabetes"]:checked');
+            const sEl = document.querySelector('input[name="smoker"]:checked');
+            const diabetes = dEl ? dEl.value : '';
+            const smoker = sEl ? sEl.value : '';
+            const gender = document.getElementById('gender').value;
+            const age = document.getElementById('age').value;
+            const sbpStr = document.getElementById('sbp').value;
+
+            const isLab = (currentMode === 'lab');
+            const subKey = isLab ? 'chol' : 'bmi';
+            const subVal = document.getElementById(isLab ? 'cholMgdl' : 'bmiBucket').value;
+            const checks = [
+                ['diabetes', diabetes, 'السكري'],
+                ['gender', gender, 'النوع'],
+                ['age', age, 'الفئة العمرية'],
+                ['smoker', smoker, 'التدخين'],
+                ['sbp', sbpStr, 'ضغط الدم'],
+                [subKey, subVal, isLab ? 'الكوليسترول' : 'فئة BMI']
+            ];
+            const missing = [];
+            checks.forEach(([k, v, label]) => { const ok = !!v; setMark(k, ok); if (!ok) missing.push(label); });
+            formComplete = (missing.length === 0);
+            if (!formComplete) { showEmptyState(missing); return; }
+
+            const sbpIdx = getSbpIndex(sbpStr);
+
+            let subIdx = 1;
+            if(currentMode === 'lab') {
+                subIdx = getCholIndex(document.getElementById('cholMgdl').value);
+            } else {
+                subIdx = getBmiIndex(document.getElementById('bmiBucket').value);
+            }
+
+            // الوضع المعملي: جدول مع/بدون سكري | وضع BMI: الجدول غير المعملي (لا يعتمد على السكري)
+            let targetDb;
+            if (currentMode === 'lab') targetDb = (diabetes === 'yes') ? dbLabWithDiabetes : dbLabWithoutDiabetes;
+            else targetDb = dbNonLab;
+            const smokerKey = (smoker === 'yes') ? 'smoker' : 'nonSmoker';
+
+            let riskValue = null;
+            try {
+                riskValue = targetDb[gender][smokerKey][age][sbpIdx][subIdx];
+            } catch(e) {
+                console.error("Lookup error", e);
+            }
+            if (riskValue === null || riskValue === undefined) {
+                document.getElementById('riskPercent').innerText = '--%';
+                return;
+            }
+
+            let category = "";
+            let colorClass = "";
+            let riskRange = "";
+
+            if (riskValue < 5) {
+                category = "خطورة منخفضة (Low Risk)";
+                colorClass = "bg-emerald-600";
+                riskRange = "< 5%";
+            } else if (riskValue < 10) {
+                category = "خطورة متوسطة (Moderate Risk)";
+                colorClass = "bg-amber-500";
+                riskRange = "5% إلى <10%";
+            } else if (riskValue < 20) {
+                category = "خطورة عالية (High Risk)";
+                colorClass = "bg-orange-600";
+                riskRange = "10% إلى <20%";
+            } else if (riskValue < 30) {
+                category = "خطورة عالية جداً (Very High)";
+                colorClass = "bg-red-600";
+                riskRange = "20% إلى <30%";
+            } else {
+                category = "خطورة حرجة للغاية (Extreme)";
+                colorClass = "bg-rose-950";
+                riskRange = "≥ 30%";
+            }
+
+            document.getElementById('riskPercent').innerText = `${riskValue}%`;
+            const catLabel = document.getElementById('riskCategoryLabel');
+            catLabel.innerText = `${category} (${riskRange})`;
+            catLabel.className = `text-xs font-bold px-3.5 py-1.5 rounded-full text-white shadow-sm ${colorClass}`;
+
+            document.getElementById('chartGridPosText').innerText = `قيمة الخلية: ${riskValue}%`;
+            document.getElementById('mobileRisk').innerText = `${riskValue}%`;
+            const nextVisitStr = formatDate(addMonthsSafe(new Date(), followUpInfo(riskValue).months));
+            document.getElementById('mobileNext').innerText = nextVisitStr;
+            const fuSheet = followUpInfo(riskValue);
+            document.getElementById('sheetRisk').innerText = `${riskValue}%`;
+            document.getElementById('sheetDate').innerText = formatDate(addMonthsSafe(new Date(), fuSheet.months));
+            document.getElementById('sheetInterval').innerText = `(بعد ${fuSheet.months} ${fuSheet.months === 12 ? 'شهراً' : 'أشهر'})`;
+            const mc = document.getElementById('mobileCat');
+            mc.innerText = category.split(' (')[0];
+            mc.className = `text-[11px] font-extrabold px-2.5 py-1.5 rounded-full text-white text-center leading-tight ${colorClass}`;
+
+            ['low', 'mod', 'high', 'vhigh', 'extr'].forEach(b => {
+                document.getElementById(`bar-${b}`).style.opacity = "0.2";
+            });
+            if(riskValue < 5) document.getElementById('bar-low').style.opacity = "1";
+            else if(riskValue < 10) document.getElementById('bar-mod').style.opacity = "1";
+            else if(riskValue < 20) document.getElementById('bar-high').style.opacity = "1";
+            else if(riskValue < 30) document.getElementById('bar-vhigh').style.opacity = "1";
+            else document.getElementById('bar-extr').style.opacity = "1";
+
+            renderProtocols(riskValue, diabetes, sbpStr, smoker);
+            updatePrintData(riskValue, category, riskRange, diabetes, gender, age, smoker, sbpStr);
+        }
+
+        function followUpInfo(riskVal) {
+            // مطابق لبند 4. Follow-up في ملف PDF (بروتوكول WHO PEN)
+            if (riskVal < 5)  return { months: 12, text: "كل 12 شهراً" };
+            if (riskVal < 10) return { months: 3,  text: "كل 3 أشهر حتى تحقيق الأهداف، ثم كل 6–9 أشهر" };
+            if (riskVal < 20) return { months: 3,  text: "كل 3–6 أشهر" };
+            return { months: 3, text: "كل 3 أشهر (وإذا لم ينخفض الخطر بعد 6 أشهر من المتابعة يُحوَّل للمستوى الأعلى)" };
+        }
+
+        function addMonthsSafe(date, n) {
+            const d = new Date(date.getTime());
+            const day = d.getDate();
+            d.setDate(1);
+            d.setMonth(d.getMonth() + n);
+            const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+            d.setDate(Math.min(day, last));
+            return d;
+        }
+
+        // يحافظ على ترتيب الأرقام والرموز (مثل <130/80) داخل النص العربي
+        function ltr(x) { return `<span dir="ltr" class="whitespace-nowrap font-bold">${x}</span>`; }
+
+        function card(icon, title, body, extraClass) {
+            return `
+                <div class="p-3.5 ${extraClass || 'bg-slate-50 border border-slate-200'} rounded-xl">
+                    <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2 mb-2">
+                        <span class="text-lg">${icon}</span> <span>${title}</span>
+                    </div>
+                    ${body}
+                </div>`;
+        }
+
+        function renderProtocols(riskVal, diabetes, sbpStr, smoker) {
+            const container = document.getElementById('protocolOutput');
+            const ageStr = document.getElementById('age').value;
+            let html = "";
+
+            const fu = followUpInfo(riskVal);
+            const dateStr = formatDate(addMonthsSafe(new Date(), fu.months));
+
+            // ===== المتابعة =====
+            html += `
+                <div class="p-4 bg-gradient-to-r from-emerald-900 to-slate-900 text-white rounded-xl shadow border border-emerald-500/30">
+                    <div class="text-xs text-amber-400 font-extrabold">📅 المتابعة (بروتوكول WHO PEN)</div>
+                    <div class="text-base font-black text-white mt-1 leading-snug">${fu.text}</div>
+                    
+                    <div class="text-xs text-slate-300 mt-2 leading-relaxed">يُبكَّر الموعد عند ظهور أعراض إكلينيكية. في كل زيارة: السؤال عن الأعراض الجديدة والالتزام بالنصائح (التدخين، الكحول، النشاط البدني، الغذاء، الأدوية)، الفحص البدني، إعادة تقدير الخطورة، والتحويل عند اللزوم.</div>
+                </div>`;
+
+            // ===== أسلوب الحياة =====
+            html += card('🥗', "أسلوب الحياة الصحي – لكافة المستويات (Life's Simple 7)", `
+                    <ul class="text-[13px] text-slate-700 list-disc pr-5 space-y-2 font-medium leading-relaxed">
+                        ${smoker === 'yes'
+                          ? '<li class="text-red-600 font-bold"><strong>الإقلاع عن التدخين كلياً:</strong> لا يوجد حد آمن للتدخين، ولا يكفي تقليل الكمية؛ يُنظر في التحويل لعيادة الإقلاع عن التدخين.</li>'
+                          : '<li><strong>التدخين:</strong> تأكيد الاستمرار في عدم التدخين (بما فيه منتجات التبغ المسخّن).</li>'}
+                        <li><strong>النشاط البدني:</strong> 150 دقيقة أسبوعياً على الأقل من التمارين الهوائية متوسطة الشدة (مثلاً مشي سريع 30 دقيقة، 5 مرات أسبوعياً).</li>
+                        <li><strong>الغذاء الصحي:</strong> فواكه وخضروات وحبوب كاملة وألبان قليلة الدسم ودواجن وأسماك ومكسرات؛ مع تقليل السكريات والمشروبات المحلاة واللحوم الدهنية والمصنعة والملح.</li>
+                        <li><strong>الوزن:</strong> الحفاظ على وزن صحي ومؤشر كتلة جسم (BMI) طبيعي؛ لإنقاص الوزن احرق سعرات أكثر مما تتناول.</li>
+                        <li><strong>الكوليسترول:</strong> غذاء صحي وتمارين منتظمة، والعلاج الخافض للدهون (الستاتين) عند الحاجة.</li>
+                        <li><strong>ضغط الدم:</strong> الهدف ${ltr('&lt;140/90 mmHg')} في معظم الحالات (أو ${ltr('&lt;130/80 mmHg')} إن كان محتملاً).</li>
+                        <li><strong>سكر الدم:</strong> الهدف HbA1c ${ltr('&lt;7%')}.</li>
+                        <li>الإرشاد لأسلوب الحياة في التقييم الأول وفي كل زيارة، ووضع خطة نمط حياة <em>بجانب</em> العلاج الدوائي (لا يُكتفى بالدواء)، وإعادة تقييم التزام المريض في كل زيارة، واقتراح بدائل صحية للتغلب على العوائق، والتحويل لأخصائي تغذية أو تثقيف سكر أو عيادة إقلاع عند الحاجة.</li>
+                    </ul>`);
+
+            // ===== ضغط الدم =====
+            const highRisk = riskVal >= 20;
+            const target = highRisk ? "130/80" : "140/90";
+            let bpBody = `<p class="text-[13px] text-slate-700 font-medium leading-relaxed">الضغط الانقباضي المسجل: ${ltr(sbpStr + ' mmHg')}. الهدف الأمثل لهذا المستوى من الخطورة (WHO/وزارة الصحة): ${ltr('&lt;' + target + ' mmHg')}. إذا استمر الضغط ${ltr('≥' + target)} بعد تعديل نمط الحياة يُنظر في العلاج الدوائي للضغط (راجع بروتوكول الضغط HTN).</p>`;
+            if (sbpStr === '120-139' && highRisk) {
+                bpBody += `<div class="mt-2 p-2.5 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-[13px] font-bold leading-relaxed">الخطورة ≥20% ← الهدف ${ltr('&lt;130/80')}. تحقق إن كانت القراءة بين 130 و139.</div>`;
+            }
+            if (sbpStr === '140-159' || sbpStr === '160-179') {
+                bpBody += `<div class="mt-2 p-2.5 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-[13px] font-bold leading-relaxed">تأكد من القراءة بقياسات متكررة. توصي إرشادات AHA/ACC 2025 ببدء العلاج الدوائي للضغط مع تعديل نمط الحياة في المرحلة الثانية (ضغط ${ltr('≥140/90')})، والهدف العلاجي ${ltr('&lt;130/80 mmHg')}.</div>`;
+            }
+            html += card('💊', 'ضغط الدم', bpBody);
+
+            // ===== حرج: SBP >= 180 =====
+            if (sbpStr === '>=180') {
+                html += `
+                <div class="p-3.5 bg-red-50 border-2 border-red-500 rounded-xl">
+                    <div class="font-extrabold text-sm text-red-800 flex items-start gap-2 mb-1">
+                        <span class="text-lg">🚨</span> <span>ضغط حرج: الانقباضي ${ltr('≥180 mmHg')} – مسار التعامل مع الضغط الشديد</span>
+                    </div>
+                    <div class="text-xs text-red-900 font-bold mb-2.5 leading-relaxed">المرجع: إرشادات AHA/ACC لضغط الدم 2025 (أحدث إرشادات حتى 2026).</div>
+                    <ol class="text-[13px] text-slate-800 list-decimal pr-5 space-y-2.5 font-medium leading-relaxed">
+                        <li><strong>أعد القياس بشكل صحيح</strong> (جلوس وراحة ومقاس كُم مناسب) وتأكد أن الضغط أعلى من ${ltr('180')} انقباضي و/أو ${ltr('120')} انبساطي. <span class="text-slate-500">(ممارسة إكلينيكية)</span></li>
+                        <li><strong>ابحث عن تلف حاد في الأعضاء المستهدفة:</strong> ألم صدر، ضيق نفس، ضعف أو خلل عصبي، تشوش أو اضطراب وعي، صداع شديد، اضطراب في الرؤية، فشل كلوي حاد. قرار الطوارئ يعتمد على تلف الأعضاء وليس على رقم الضغط وحده.</li>
+                        <li class="text-red-700 font-bold"><strong>لو يوجد تلف حاد = طوارئ ارتفاع الضغط (Hypertensive Emergency):</strong> تحويل فوري لمستشفى بها رعاية مركزة. توصي الإرشادات بدخول العناية المركزة للمراقبة المستمرة للضغط والأعضاء والنظر في العلاج الوريدي. لا تؤخر التحويل بمحاولة العلاج في العيادة.</li>
+                        <li><strong>لو لا يوجد تلف حاد = "ضغط شديد" (Severe Hypertension)</strong> (المسمى الجديد بدل hypertensive urgency): التقييم والعلاج في <strong>العيادة الخارجية</strong>؛ بدء أو إعادة أو تكثيف أدوية الضغط بالفم في الوقت المناسب (راجع بروتوكول الضغط للأدوية والجرعات). لا حاجة لتخفيض الضغط فوراً داخل العيادة.</li>
+                        <li><strong>هدف الضغط:</strong> ${ltr('&lt;130/80 mmHg')}، وتشجع الإرشادات على الوصول لانقباضي ${ltr('&lt;120')} عندما يكون ممكناً ومحتملاً لمرضى الخطورة العالية.</li>
+                        <li><strong>راجع العوامل المساهمة:</strong> الالتزام بالأدوية، الأدوية المتداخلة (مثل مسكنات NSAIDs ومزيلات الاحتقان)، الكحول، الملح الزائد؛ وفكر في الأسباب الثانوية والتحويل للتخصص إذا لم يتحكم الضغط بالعلاج. <span class="text-slate-500">(ممارسة إكلينيكية)</span></li>
+                        <li><strong>متابعة قريبة</strong> للتأكد من التحكم (يُقترح خلال أيام إلى أسبوعين، ثم شهرياً حتى الوصول للهدف). <span class="text-slate-500">(اقتراح إكلينيكي)</span></li>
+                        <li><strong>الجراحة:</strong> إذا كانت هناك جراحة كبرى اختيارية والضغط الانقباضي ${ltr('≥180')} أو الانبساطي ${ltr('≥110')} فيجوز النظر في تأجيل الجراحة.</li>
+                    </ol>
+                </div>`;
+            }
+
+            // ===== Statins (English, concise – per WHO/MOHP Egypt PDF, section 3.3) =====
+            let statin = "";
+            if (riskVal >= 30) {
+                statin = "<strong class='text-red-700'>High-intensity statin:</strong> atorvastatin 40–80 mg or rosuvastatin 20–40 mg (LDL ↓ &gt;50%). LDL target <strong>&lt;70 mg/dL</strong>.";
+            } else if (riskVal >= 20) {
+                statin = "<strong class='text-red-700'>Moderate-intensity statin:</strong> atorvastatin 20 mg or rosuvastatin 5–10 mg (LDL ↓ 30–50%). LDL target <strong>&lt;100 mg/dL</strong>.";
+            } else {
+                statin = "<strong>No statin on risk level alone</strong> (primary-prevention statins start at risk &gt;20%). See special cases below.";
+            }
+            let statinList = "";
+            if (diabetes === 'yes') {
+                statinList += "<li><strong>Diabetes:</strong> no TOD / no multiple risk factors → moderate-intensity (LDL &lt;100); with TOD or multiple risk factors → high-intensity (LDL &lt;70).</li>";
+            }
+            statinList += "<li><strong>Established ASCVD</strong> (or CKD): treat as risk &gt;20%; ASCVD → high-intensity, LDL &lt;70.</li>";
+            statinList += "<li><strong>LDL ≥190 mg/dL or total cholesterol &gt;320 mg/dL</strong> → high-intensity; refer for FH assessment.</li>";
+            statinList += "<li><strong>Re-check lipids after 4–6 weeks.</strong> If not at target: max tolerated dose → add ezetimibe 10 mg → refer.</li>";
+            statinList += "<li><strong>Safety:</strong> contraindicated in pregnancy/lactation. Muscle symptoms with CK &gt;10× → stop and refer. Refer statin intolerance.</li>";
+            html += `
+                <div dir="ltr" class="text-left p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="font-extrabold text-sm text-slate-800 flex items-center gap-2 mb-2">
+                        <span class="text-lg">🧪</span> <span>Lipid-lowering therapy (statins)</span>
+                    </div>
+                    <p class="text-[13px] text-slate-700 font-medium leading-relaxed">${statin}</p>
+                    <ul class="text-[13px] text-slate-600 list-disc pl-5 space-y-1.5 font-medium mt-2 leading-relaxed">${statinList}</ul>
+                </div>`;
+
+            // ===== الأسبرين =====
+            let aspirin = "غير موصى به للوقاية الأولية الروتينية؛ يُنظر فيه فقط لمرضى ASCVD المثبت.";
+            if (riskVal >= 20) {
+                aspirin = "يمكن النظر فيه للوقاية الأولية عند خطورة أكثر من 20% وعمر 40–70 سنة مع انخفاض خطر النزف، ويُنظر فيه لكل مريض ASCVD مثبت.";
+                if (ageStr === '70-74') aspirin += " <em>ملاحظة: الفئة العمرية 70–74 عند أو فوق الحد الأعلى للعمر (70) في البروتوكول.</em>";
+            }
+            html += card('🩹', 'الأسبرين (Aspirin)', `<p class="text-[13px] text-slate-700 font-medium leading-relaxed">${aspirin}</p>`);
+
+            // ===== السكري =====
+            if (diabetes === 'yes') {
+                html += card('🩸', 'المتابعة السكرية',
+                    `<p class="text-[13px] text-red-900 font-medium leading-relaxed">المستهدف للـ HbA1c ${ltr('&lt;7%')}. للعلاج الدوائي للسكري راجع بروتوكول السكري (DM protocol).</p>`,
+                    'bg-rose-50 border border-rose-200');
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updatePrintData(riskVal, category, riskRange, diabetes, gender, age, smoker, sbpStr) {
+            document.getElementById('printDate').innerText = formatDate(new Date());
+            document.getElementById('printAgeGender').innerText = `${age} سنة (${gender === 'male' ? 'رجل' : 'أنثى'})`;
+            document.getElementById('printDiabetes').innerText = diabetes === 'yes' ? 'مريض سكري' : 'بدون سكري';
+            if (currentMode !== 'lab') document.getElementById('printDiabetes').innerText += ' (غير مؤثر في جدول BMI)';
+            document.getElementById('printSmoking').innerText = smoker === 'yes' ? 'مدخن حالي' : 'غير مدخن';
+            document.getElementById('printSBP').innerText = `${sbpStr} mmHg`;
+            
+            if(currentMode === 'lab') {
+                const cs = document.getElementById('cholMgdl'); document.getElementById('printCholBmi').innerText = `كوليسترول: ${cs.options[cs.selectedIndex].text}`;
+                document.getElementById('printModel').innerText = "نموذج التحاليل المعملية (Lab Based)";
+            } else {
+                document.getElementById('printCholBmi').innerText = `فئة BMI: ${document.getElementById('bmiBucket').value} kg/m²`;
+                document.getElementById('printModel').innerText = "نموذج كتلة الجسم (BMI Based)";
+            }
+
+            document.getElementById('printRiskVal').innerText = `${category} (${riskVal}%)`;
+            document.getElementById('printRiskDesc').innerText = `تقييم خطورة الوعائية القلبية 10 سنوات: نطاق ${riskRange}`;
+            document.getElementById('printDirectives').innerHTML = document.getElementById('protocolOutput').innerHTML;
+
+            const nextD = addMonthsSafe(new Date(), followUpInfo(riskVal).months);
+            document.getElementById('printNextDate').innerText = formatDate(nextD);
+        }
+
+        function copyClinicalNote() {
+            if (!formComplete) { alert('أكمل كل بيانات المريض أولاً'); return; }
+            const risk = document.getElementById('riskPercent').innerText;
+            const category = document.getElementById('riskCategoryLabel').innerText;
+            const age = document.getElementById('age').value;
+            const gender = document.getElementById('gender').value;
+            const diabetes = document.querySelector('input[name="diabetes"]:checked').value;
+            const sbp = document.getElementById('sbp').value;
+
+            const summaryText = `[تقرير تقييم مبادرة قلبك أمانة - د. محمد فايز GP | 💬 01028945823]\nالتاريخ: ${formatDate(new Date())}\nالمريض: ${age} سنة، ${gender === 'male' ? 'رجل' : 'أنثى'} | سكري: ${diabetes}\nضغط الدم: ${sbp} mmHg\nنسبة الخطورة المحسوبة (CVD Risk): ${risk} (${category})\nالوحدة: مركز تفتيش السرو - إدارة فارسكور الصحية.`;
+
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = summaryText;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+
+            alert("تم نسخ الملاحظة الطبية بنجاح إلى الحافظة!");
+        }
+
+        function resetForm() {
+            document.getElementById('cvdForm').reset();
+            document.getElementById('bmiWeight').value = '';
+            document.getElementById('bmiHeight').value = '';
+            calcBmi();
+            calculateRisk();
+        }
+
+        window.onload = function() {
+            calcBmi();
+            calculateRisk();
+        };
+    </script>
+</body>
+</html>
