@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>قلبك أمانة - حاسبة خطورة أمراض القلب والأوعية الدموية (CVD Risk)</title>
+    
+    <!-- Vercel Web Analytics -->
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -430,7 +437,7 @@
                 bmiSec.classList.remove('hidden');
                 cholSec.classList.add('hidden');
                 modeDesc.innerText = "* التقييم بدون تحاليل (Non-laboratory chart) اعتماداً على BMI. هذا الجدول في WHO لا يتضمن متغير السكري، لذا لا يؤثر السكري على الرقم هنا.";
-                modelType.innerText = "نموذج بدون تحاليل (BMI Model)";
+                modelType.innerText = "نموذج ��دون تحاليل (BMI Model)";
             }
             calculateRisk();
         }
@@ -725,7 +732,7 @@
                     <ul class="text-[13px] text-slate-700 list-disc pr-5 space-y-2 font-medium leading-relaxed">
                         ${smoker === 'yes'
                           ? '<li class="text-red-600 font-bold"><strong>الإقلاع عن التدخين كلياً:</strong> لا يوجد حد آمن للتدخين، ولا يكفي تقليل الكمية؛ يُنظر في التحويل لعيادة الإقلاع عن التدخين.</li>'
-                          : '<li><strong>التدخين:</strong> تأكيد الاستمرار في عدم التدخين (بما فيه منتجات التبغ المسخّن).</li>'}
+                          : '<li><strong>التدخين:</strong> تأكيد الاستمرار في عدم التدخين (بما فيه منتجا�� التبغ المسخّن).</li>'}
                         <li><strong>النشاط البدني:</strong> 150 دقيقة أسبوعياً على الأقل من التمارين الهوائية متوسطة الشدة (مثلاً مشي سريع 30 دقيقة، 5 مرات أسبوعياً).</li>
                         <li><strong>الغذاء الصحي:</strong> فواكه وخضروات وحبوب كاملة وألبان قليلة الدسم ودواجن وأسماك ومكسرات؛ مع تقليل السكريات والمشروبات المحلاة واللحوم الدهنية والمصنعة والملح.</li>
                         <li><strong>الوزن:</strong> الحفاظ على وزن صحي ومؤشر كتلة جسم (BMI) طبيعي؛ لإنقاص الوزن احرق سعرات أكثر مما تتناول.</li>
